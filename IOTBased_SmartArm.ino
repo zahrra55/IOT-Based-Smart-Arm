@@ -15,6 +15,13 @@ const int s0 = 12, s1 = 13, s2 = 10, s3 = 8, outPin = 11;
 int redVal = 0, greenVal = 0, blueVal = 0;
 
 // =====================================================
+// === LED PINS (NEW) ==================================
+// =====================================================
+const int ledRED = 2;    // **NEW**
+const int ledGREEN = 4;  // **NEW**
+const int ledBLUE = 7;   // **NEW**
+
+// =====================================================
 // === GRIPPER ANGLES (BASED ON YOUR CALIBRATION) ======
 // =====================================================
 const int GRIPPER_OPEN = 180;   // Your value for OPEN
@@ -31,12 +38,23 @@ void setup() {
   servoSHOULDER.attach(5);
   servoELBOW.attach(6);
   servoGRIPPER.attach(9);
+  
 
   // Setup the color sensor
   pinMode(s0, OUTPUT); pinMode(s1, OUTPUT);
   digitalWrite(s0, HIGH); digitalWrite(s1, LOW); // 20% frequency scaling
   pinMode(s2, OUTPUT); pinMode(s3, OUTPUT);
   pinMode(outPin, INPUT);
+
+  // **NEW:** Setup the LED pins as OUTPUTs
+  pinMode(ledRED, OUTPUT);
+  pinMode(ledGREEN, OUTPUT);
+  pinMode(ledBLUE, OUTPUT);
+  
+  // **NEW:** Start with all LEDs OFF
+  digitalWrite(ledRED, LOW);
+  digitalWrite(ledGREEN, LOW);
+  digitalWrite(ledBLUE, LOW);
 
   // **UPDATED:** Moving to your custom HOME position
   Serial.println("Moving to HOME position...");
@@ -61,21 +79,34 @@ void loop() {
 
   if (isRed()) {
     Serial.println("Detected RED box");
+    setLedColor(HIGH, LOW, LOW); // **ADDED:** Turn RED LED ON
     colorTask(90); // Call task with RED drop-off angle
   } 
   else if (isGreen()) {
     Serial.println("Detected GREEN box");
+    setLedColor(LOW, HIGH, LOW); // **ADDED:** Turn GREEN LED ON
     colorTask(50); // Call task with GREEN drop-off angle
   } 
   else if (isBlue()) {
     Serial.println("Detected BLUE box");
+    setLedColor(LOW, LOW, HIGH); // **ADDED:** Turn BLUE LED ON
     colorTask(10); // Call task with BLUE drop-off angle
   } 
   else {
     Serial.println("No valid color detected.");
+    setLedColor(LOW, LOW, LOW); // **ADDED:** Keep ALL LEDs OFF
   }
 
   delay(1000); // Wait before next scan
+}
+
+// =====================================================
+// === LED CONTROL FUNCTION (NEW) ======================
+// =====================================================
+void setLedColor(bool red, bool green, bool blue) {
+  digitalWrite(ledRED, red);
+  digitalWrite(ledGREEN, green);
+  digitalWrite(ledBLUE, blue);
 }
 
 // =====================================================
@@ -195,4 +226,7 @@ void colorTask(int dropWaistAngle) {
   // W=40, S=10, E=130, G=0 (Closed)
   moveArm(40, 10, 130, GRIPPER_CLOSED);
   delay(1000);
+  
+  // **NEW:** Turn off all LEDs after the task is complete
+  setLedColor(LOW, LOW, LOW);
 }
