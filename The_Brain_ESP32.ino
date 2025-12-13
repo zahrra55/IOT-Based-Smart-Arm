@@ -21,29 +21,28 @@
 #define S2 25
 #define S3 26
 #define S_OUT 35
-
 // =====================================================
-// 2. CALIBRATED ANGLES (الخصر 150)
+// 2. CALIBRATED ANGLES
 // =====================================================
-// وضع البداية (Home)
+// (Home)
 const int HOME_W = 50;
 const int HOME_S = 90;
 const int HOME_E = 130;
-const int HOME_G = 0; // مغلق
+const int HOME_G = 0; // closed
 
-// وضع الاستعداد للالتقاط
-const int PREP_W = 150; // **تعديل:** أصبحت 150 حسب طلبك
+// Getting ready to grab
+const int PREP_W = 150;
 const int PREP_S = 90;
 const int PREP_E = 180;
-const int PREP_G = 180; // مفتوح
+const int PREP_G = 180; //open
 
-// وضع الإمساك الفعلي (Grab)
-const int GRAB_W = 150; // **تعديل:** أصبحت 150
+// (Grab)
+const int GRAB_W = 150; 
 const int GRAB_S = 150; 
 const int GRAB_E = 160; 
-const int GRAB_G = 0;   // إغلاق
+const int GRAB_G = 0;   
 
-// متغيرات الألوان
+// color vars
 int redVal = 0, greenVal = 0, blueVal = 0;
 char detectedColorChar = 'N'; 
 unsigned long colorDetectionStartTime = 0;
@@ -246,4 +245,5 @@ bool isBlue() { return (blueVal < 320 && blueVal < redVal && blueVal < greenVal)
 
 void setLedColor(bool red, bool green, bool blue) {
   digitalWrite(PIN_LED_RED, red); digitalWrite(PIN_LED_GREEN, green); digitalWrite(PIN_LED_BLUE, blue);
+
 }
