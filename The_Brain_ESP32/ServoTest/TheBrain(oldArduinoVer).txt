@@ -1,0 +1,95 @@
+#include <Wire.h>
+#include <Adafruit_SSD1306.h>
+#include <FluxGarage_RoboEyes.h>
+#include "BluetoothSerial.h" // مكتبة البلوتوث المدمجة (تعمل بدون نت)
+
+// ---------------- إعدادات الشاشة ----------------
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+RoboEyes<Adafruit_SSD1306> roboEyes(display);
+
+// ---------------- إعدادات البلوتوث ----------------
+BluetoothSerial SerialBT;
+
+// ---------------- إعدادات الاتصال بالأردوينو ----------------
+// سنستخدم Serial2 للتحدث مع الأردوينو
+#define RXD2 16 // وصله بـ A3 في الأردوينو (عبر مقسم جهد)
+#define TXD2 17 // وصله بـ A2 في الأردوينو (مباشرة)
+
+void setup() {
+  // 1. تشغيل الاتصال مع الكمبيوتر (للكاميرا والـ Debug)
+  Serial.begin(115200);
+
+  // 2. تشغيل الاتصال مع الأردوينو (UART)
+  Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
+
+  // 3. تشغيل البلوتوث (سيظهر الاسم في موبايلك)
+  SerialBT.begin("Smart_Arm_Master"); 
+  Serial.println("Bluetooth Started! Ready to pair.");
+
+  // 4. تشغيل الشاشة والعيون
+  Wire.begin(21, 22); // تحديد المنافذ
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("Screen Failed");
+    for(;;);
+  }
+  
+  roboEyes.begin(SCREEN_WIDTH, SCREEN_HEIGHT, 100);
+  roboEyes.setAutoblinker(ON, 3, 2);
+  roboEyes.setIdleMode(ON, 2, 2);
+  roboEyes.setMood(DEFAULT);
+}
+
+void loop() {
+  // تحديث العيون دائماً (الأولوية القصوى)
+  roboEyes.update();
+
+  // -------------------------------------------------
+  // المصدر الأول: أوامر من تطبيق الموبايل (Bluetooth)
+  // -------------------------------------------------
+  if (SerialBT.available()) {
+    char btCmd = SerialBT.read();
+    Serial.print("Bluetooth Command: ");
+    Serial.println(btCmd);
+    
+    // إرسال الأمر للأردوينو
+    Serial2.write(btCmd);
+    
+    // تفاعل العيون مع الأمر
+    reactToCommand(btCmd);
+  }
+
+  // -------------------------------------------------
+  // المصدر الثاني: أوامر من الكمبيوتر (Python/Camera)
+  // -------------------------------------------------
+  if (Serial.available()) {
+    char pcCmd = Serial.read();
+    
+    // إرسال الأمر للأردوينو
+    Serial2.write(pcCmd);
+
+    // تفاعل العيون مع الأمر
+    reactToCommand(pcCmd);
+  }
+}
+
+// دالة لتغيير تعابير الوجه حسب الأمر
+void reactToCommand(char cmd) {
+  switch (cmd) {
+    case 'R': // Red Object
+    case 'G': // Green Object
+    case 'B': // Blue Object
+      roboEyes.setMood(HAPPY); // سعيد لأنه وجد شيئاً
+      break;
+    
+    case 'O': // Open Gripper
+    case 'C': // Close Gripper
+      roboEyes.setMood(ANGRY); // تركيز (يبدو كأنه غاضب قليلاً)
+      break;
+      
+    default:
+      // roboEyes.setMood(DEFAULT); // ارجع للطبيعي
+      break;
+  }
+}
